@@ -44,6 +44,12 @@ export type DemoKey =
   | 'http-interceptors'
   | 'smart-vs-presentational';
 
+export interface CodeCase {
+  call: string;
+  expected: unknown;
+  label?: string;
+}
+
 export type TaskValidator =
   | {
       kind: 'predict';
@@ -58,6 +64,12 @@ export type TaskValidator =
     }
   | {
       kind: 'self-check';
+      explanation: string;
+    }
+  | {
+      kind: 'code';
+      starter: string;
+      cases: CodeCase[];
       explanation: string;
     };
 

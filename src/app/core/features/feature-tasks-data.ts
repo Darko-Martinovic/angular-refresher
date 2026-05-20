@@ -261,6 +261,34 @@ export const TASKS_BY_SLUG: Record<string, Task[]> = {
           'concatMap queues each inner Observable and runs them one at a time, in order.',
       },
     },
+    {
+      prompt:
+        'Implement `pipe(...fns)` — left-to-right function composition. `pipe(f, g)(x)` should equal `g(f(x))`. This is the synchronous essence of what RxJS `pipe(opA, opB)` does on streams.',
+      hint: 'Array.reduce over the functions, starting from the input value, applying each in turn.',
+      validator: {
+        kind: 'code',
+        starter: `function pipe(...fns) {
+  // return a function that applies each fn in fns left-to-right
+  // pipe(f, g)(x) === g(f(x))
+}`,
+        cases: [
+          { call: 'pipe(x => x + 1, x => x * 2)(3)', expected: 8, label: 'pipe(+1, *2)(3) → 8' },
+          { call: 'pipe()(42)', expected: 42, label: 'pipe()(42) — no fns → identity' },
+          {
+            call: `pipe(s => s.trim(), s => s.toUpperCase())('  hi  ')`,
+            expected: 'HI',
+            label: `pipe(trim, upper)('  hi  ') → 'HI'`,
+          },
+          {
+            call: 'pipe(x => x * 2, x => x + 1, x => x * x)(3)',
+            expected: 49,
+            label: 'pipe(*2, +1, square)(3) → 49',
+          },
+        ],
+        explanation:
+          'RxJS `obs.pipe(op1, op2)` is exactly this pattern applied to streams instead of plain values. Each operator transforms its input into the input of the next. Your `reduce`-based version is the value-level equivalent.',
+      },
+    },
   ],
 
   'async-pipe': [
@@ -329,6 +357,42 @@ export const TASKS_BY_SLUG: Record<string, Task[]> = {
           'AsyncSubject emits only its last value, and only on completion. Rarely useful in app code.',
       },
     },
+    {
+      prompt:
+        'Implement `behaviorSubject(initial)` returning `{ value, next(v), subscribe(observer) }`. `subscribe` must immediately invoke the observer with the current value and on every `next`. It should return an unsubscribe function.',
+      hint:
+        'Hold an array of observers. `next(v)` updates `value` and calls every observer. `subscribe(o)` first calls `o(value)`, then pushes it; the unsubscribe function removes it.',
+      validator: {
+        kind: 'code',
+        starter: `function behaviorSubject(initial) {
+  // return { value, next(v), subscribe(observer) }
+}`,
+        cases: [
+          {
+            call: '(() => { const s = behaviorSubject(5); return s.value; })()',
+            expected: 5,
+            label: '.value exposes the current value',
+          },
+          {
+            call: `(() => { const s = behaviorSubject(0); const log = []; s.subscribe(v => log.push(v)); s.next(1); s.next(2); return log; })()`,
+            expected: [0, 1, 2],
+            label: 'subscriber receives initial + every emission',
+          },
+          {
+            call: `(() => { const s = behaviorSubject('a'); const log = []; const off = s.subscribe(v => log.push(v)); off(); s.next('b'); return log; })()`,
+            expected: ['a'],
+            label: 'unsubscribe stops future emissions',
+          },
+          {
+            call: `(() => { const s = behaviorSubject(0); s.next(7); const log = []; s.subscribe(v => log.push(v)); return log; })()`,
+            expected: [7],
+            label: 'late subscriber receives the CURRENT value',
+          },
+        ],
+        explanation:
+          'A BehaviorSubject is a multicast stream with a current value: every new subscriber synchronously receives that value, then every subsequent `next`. Your implementation matches the RxJS contract.',
+      },
+    },
   ],
 
   'change-detection': [
@@ -380,6 +444,41 @@ export const TASKS_BY_SLUG: Record<string, Task[]> = {
         kind: 'self-check',
         explanation:
           'effect() re-runs whenever any signal it reads changes — that is the whole side-effect contract.',
+      },
+    },
+    {
+      prompt:
+        'Implement a minimal `createSignal(initial)` returning `{ get, set }`. This is the bare metal of what Angular\'s `signal()` factory provides (without dependency tracking).',
+      hint: 'A closure over a local variable is enough. `get` returns it; `set(v)` assigns it.',
+      validator: {
+        kind: 'code',
+        starter: `function createSignal(initial) {
+  // return { get: () => ..., set: (v) => ... }
+}`,
+        cases: [
+          {
+            call: '(() => { const s = createSignal(5); return s.get(); })()',
+            expected: 5,
+            label: 'createSignal(5).get() → 5',
+          },
+          {
+            call: '(() => { const s = createSignal(0); s.set(10); return s.get(); })()',
+            expected: 10,
+            label: 'after set(10), get() → 10',
+          },
+          {
+            call: '(() => { const s = createSignal(0); s.set(1); s.set(2); s.set(3); return s.get(); })()',
+            expected: 3,
+            label: 'last write wins',
+          },
+          {
+            call: '(() => { const a = createSignal(1); const b = createSignal(2); a.set(99); return b.get(); })()',
+            expected: 2,
+            label: 'two signals are independent',
+          },
+        ],
+        explanation:
+          'Angular\'s `signal()` adds dependency tracking — reading the signal inside a `computed()` or template registers a dependency so the framework knows what to update. Strip that away and you are left with this tiny get/set closure.',
       },
     },
   ],
@@ -651,6 +750,48 @@ export const TASKS_BY_SLUG: Record<string, Task[]> = {
           'NgRx SignalStore (and ComponentStore) are lighter middle-ground options when a full Redux-style store is too much.',
       },
     },
+    {
+      prompt:
+        'Write a pure Redux-style `reducer(state, action)` for a counter. State shape: `{ count: number }`. Handle `\'inc\'`, `\'dec\'`, `\'set\'` (with `action.value`) and any unknown type (passthrough). When `state` is undefined, return `{ count: 0 }`.',
+      hint:
+        'A switch on `action.type` returning a NEW object — never mutate `state`. Default branch (including init/`undefined`) returns the current state or the initial one.',
+      validator: {
+        kind: 'code',
+        starter: `function reducer(state, action) {
+  // pure: do not mutate state
+  // return { count: ... } for every code path
+}`,
+        cases: [
+          {
+            call: `reducer(undefined, { type: '@@INIT' })`,
+            expected: { count: 0 },
+            label: 'init returns { count: 0 }',
+          },
+          {
+            call: `reducer({ count: 5 }, { type: 'inc' })`,
+            expected: { count: 6 },
+            label: `'inc' → +1`,
+          },
+          {
+            call: `reducer({ count: 5 }, { type: 'dec' })`,
+            expected: { count: 4 },
+            label: `'dec' → -1`,
+          },
+          {
+            call: `reducer({ count: 5 }, { type: 'set', value: 42 })`,
+            expected: { count: 42 },
+            label: `'set' uses action.value`,
+          },
+          {
+            call: `reducer({ count: 5 }, { type: 'unknown' })`,
+            expected: { count: 5 },
+            label: 'unknown type is a passthrough',
+          },
+        ],
+        explanation:
+          'Reducers are pure functions of `(state, action) → state`. The passthrough on unknown action types is what lets multiple reducers safely combine — each only handles what it knows about.',
+      },
+    },
   ],
 
   'code-reuse': [
@@ -672,6 +813,30 @@ export const TASKS_BY_SLUG: Record<string, Task[]> = {
         correct: 2,
         explanation:
           'Directives are for behavior attached to existing elements. They are under-used.',
+      },
+    },
+    {
+      prompt:
+        'Write a pure function `initials(name)` that returns the uppercased first letter of every whitespace-separated word. The transform should tolerate extra spaces and an empty string.',
+      hint:
+        '`split(/\\s+/)`, filter out empty pieces, map to `w[0]`, join, uppercase.',
+      validator: {
+        kind: 'code',
+        starter: `function initials(name) {
+  // 'Ada Lovelace'      -> 'AL'
+  // 'grace b hopper'    -> 'GBH'
+  // '  spaced  out  '   -> 'SO'
+  // ''                  -> ''
+}`,
+        cases: [
+          { call: `initials('Ada Lovelace')`, expected: 'AL', label: `'Ada Lovelace' → 'AL'` },
+          { call: `initials('grace b hopper')`, expected: 'GBH', label: `'grace b hopper' → 'GBH'` },
+          { call: `initials('  spaced  out  ')`, expected: 'SO', label: `trims and collapses whitespace` },
+          { call: `initials('Solo')`, expected: 'S', label: `single word → 'S'` },
+          { call: `initials('')`, expected: '', label: `empty string → ''` },
+        ],
+        explanation:
+          'This is the shape of a pure Angular pipe: a function from input to output, with no side effects and no time dependency. Wrap it in `@Pipe({ name: \'initials\' })` and you have a memoized template transform — exactly what pure pipes are designed for.',
       },
     },
   ],
@@ -754,6 +919,44 @@ export const TASKS_BY_SLUG: Record<string, Task[]> = {
         correct: 1,
         explanation:
           '4xx errors are typically client problems that will keep failing — do not retry them. 5xx and network errors are transient and worth retrying with backoff.',
+      },
+    },
+    {
+      prompt:
+        'Implement `runInterceptors(interceptors, req)` that chains an array of `(req, next) => any` interceptors. Each interceptor receives `req` and a `next` function; calling `next(req)` invokes the next interceptor. The final `next` should return its argument unchanged. Return the chain\'s result.',
+      hint:
+        'Recursion or a manual reduce-from-right. The innermost `next` is `(r) => r`; wrap each interceptor by giving it the inner `next` you just built.',
+      validator: {
+        kind: 'code',
+        starter: `function runInterceptors(interceptors, req) {
+  // Build a chain: chain(req) calls interceptors[0](req, next1)
+  // where next1(r) calls interceptors[1](r, next2), and so on.
+  // The terminal next is the identity (r) => r.
+}`,
+        cases: [
+          {
+            call: `runInterceptors([], { url: '/a' })`,
+            expected: { url: '/a' },
+            label: 'empty chain returns the req unchanged',
+          },
+          {
+            call: `runInterceptors([(req, next) => next({ ...req, auth: 'token' })], { url: '/a' })`,
+            expected: { url: '/a', auth: 'token' },
+            label: 'single interceptor: adds auth header',
+          },
+          {
+            call: `runInterceptors([(req, next) => next({ ...req, a: 1 }), (req, next) => next({ ...req, b: 2 })], {})`,
+            expected: { a: 1, b: 2 },
+            label: 'two interceptors compose request transforms',
+          },
+          {
+            call: `runInterceptors([(req, next) => { const res = next(req); return { ...res, logged: true }; }], { url: '/x' })`,
+            expected: { url: '/x', logged: true },
+            label: 'interceptor can transform the response after next()',
+          },
+        ],
+        explanation:
+          'This is exactly the shape of Angular\'s functional HTTP interceptors: each one can mutate the request before `next()`, and the response after. The chain is built right-to-left from a terminal handler — the same trick Express, Koa and Redux middleware use.',
       },
     },
   ],
@@ -845,6 +1048,45 @@ export const TASKS_BY_SLUG: Record<string, Task[]> = {
         correct: 0,
         explanation:
           'Stable track keys prevent unnecessary re-render, and the CDK virtual scroll viewport renders only the visible rows.',
+      },
+    },
+    {
+      prompt:
+        'Implement `memoize(fn)` that caches results keyed by the first argument. Calling the memoized version with the same input must invoke the underlying `fn` only once.',
+      hint:
+        'Close over a Map. On call, if the key is in the map return the cached value; otherwise call fn, store, return.',
+      validator: {
+        kind: 'code',
+        starter: `function memoize(fn) {
+  // return a function that calls fn at most once per unique first-arg input
+}`,
+        cases: [
+          {
+            call:
+              '(() => { let calls = 0; const sq = memoize(x => { calls++; return x*x; }); sq(3); sq(3); sq(3); return calls; })()',
+            expected: 1,
+            label: '3 calls with same input → fn invoked once',
+          },
+          {
+            call:
+              '(() => { let calls = 0; const sq = memoize(x => { calls++; return x*x; }); sq(2); sq(3); sq(2); sq(3); return calls; })()',
+            expected: 2,
+            label: 'two distinct inputs → fn invoked twice',
+          },
+          {
+            call: 'memoize(x => x + 1)(5)',
+            expected: 6,
+            label: 'returns the underlying function\'s value',
+          },
+          {
+            call:
+              '(() => { const sq = memoize(x => x * x); sq(4); return sq(4); })()',
+            expected: 16,
+            label: 'second call returns cached value',
+          },
+        ],
+        explanation:
+          'Memoization is the foundation of `computed()`, `useMemo`, `React.memo`\'s prop comparison and the OnPush "skip if reference unchanged" heuristic. It only pays off for pure functions — caching impure ones returns stale data.',
       },
     },
   ],

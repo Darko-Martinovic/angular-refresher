@@ -73,11 +73,80 @@
               I've tried this in the demo above
             </mat-checkbox>
           }
+          @case ('code') {
+            <div class="task__editor">
+              <header class="task__editor-bar">
+                <span>JavaScript</span>
+                <span class="task__editor-hint">Tab inserts 2 spaces · runs in a sandboxed Web Worker</span>
+              </header>
+              <textarea
+                class="task__editor-area"
+                spellcheck="false"
+                autocomplete="off"
+                autocapitalize="off"
+                wrap="off"
+                [ngModel]="codeOf(i)"
+                (ngModelChange)="setCode(i, $event)"
+                (keydown)="onEditorKeydown(i, $event)"
+                rows="8"
+              ></textarea>
+            </div>
+
+            @if (stateOf(i).result; as result) {
+              <div class="task__cases">
+                @if (result.fatal) {
+                  <div class="task__case task__case--error">
+                    <mat-icon fontSet="material-symbols-outlined">error</mat-icon>
+                    <span>{{ result.fatal }}</span>
+                  </div>
+                } @else {
+                  @for (c of result.cases; track $index) {
+                    <div
+                      class="task__case"
+                      [class.task__case--pass]="c.ok"
+                      [class.task__case--fail]="!c.ok"
+                    >
+                      <mat-icon fontSet="material-symbols-outlined">
+                        {{ c.ok ? 'check' : 'close' }}
+                      </mat-icon>
+                      <div class="task__case-body">
+                        <code class="task__case-call">{{ c.label || c.call }}</code>
+                        @if (!c.ok) {
+                          @if (c.error) {
+                            <small class="task__case-detail">threw: {{ c.error }}</small>
+                          } @else {
+                            <small class="task__case-detail">
+                              expected <code>{{ formatValue(c.expected) }}</code>,
+                              got <code>{{ formatValue(c.actual) }}</code>
+                            </small>
+                          }
+                        }
+                      </div>
+                    </div>
+                  }
+                }
+              </div>
+            }
+          }
         }
       </div>
 
       <div class="task__actions">
-        @if (!isSubmitted(i)) {
+        @if (task.validator.kind === 'code') {
+          <button
+            mat-raised-button
+            color="primary"
+            (click)="runTests(i)"
+            [disabled]="!canSubmit(i)"
+          >
+            <mat-icon fontSet="material-symbols-outlined">play_arrow</mat-icon>
+            {{ isRunning(i) ? 'Running…' : 'Run tests' }}
+          </button>
+          <button mat-stroked-button (click)="resetCode(i)" [disabled]="isRunning(i)">
+            <mat-icon fontSet="material-symbols-outlined">restart_alt</mat-icon>
+            Reset to starter
+          </button>
+        } @else if (!isSubmitted(i)) {
           <button
             mat-raised-button
             color="primary"
@@ -105,7 +174,21 @@
             {{ isCorrect(i) ? 'check_circle' : 'cancel' }}
           </mat-icon>
           <div>
-            <strong>{{ isCorrect(i) ? 'Correct.' : 'Not quite.' }}</strong>
+            <strong>
+              @if (isCorrect(i)) {
+                @if (task.validator.kind === 'code' && stateOf(i).result; as r) {
+                  All {{ r.total }} tests passed.
+                } @else {
+                  Correct.
+                }
+              } @else {
+                @if (task.validator.kind === 'code' && stateOf(i).result; as r) {
+                  {{ r.passed }} / {{ r.total }} tests passing.
+                } @else {
+                  Not quite.
+                }
+              }
+            </strong>
             <span>{{ task.validator.explanation }}</span>
           </div>
         </div>
