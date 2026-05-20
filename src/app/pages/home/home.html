@@ -1,0 +1,98 @@
+<section class="hero">
+  <div class="hero__inner">
+    <span class="hero__eyebrow">
+      <mat-icon fontSet="material-symbols-outlined">bolt</mat-icon>
+      Angular v21 refresher
+    </span>
+    <h1 class="hero__title">
+      Modern Angular, <span class="hero__accent">at a glance</span>
+    </h1>
+    <p class="hero__lead">
+      An internal reference covering every feature from <strong>Angular fundamentals</strong>
+      to the latest <strong>zoneless v21 reactivity model</strong> — with snippets, live demos,
+      and pointers into this codebase so you can see each idea in working code.
+    </p>
+
+    <div class="hero__stats">
+      <div class="stat">
+        <span class="stat__value">{{ totalFeatures() }}</span>
+        <span class="stat__label">Features</span>
+      </div>
+      <div class="stat">
+        <span class="stat__value">{{ totalSections() }}</span>
+        <span class="stat__label">Sections</span>
+      </div>
+      <div class="stat">
+        <span class="stat__value">{{ demoCount() }}</span>
+        <span class="stat__label">Live demos</span>
+      </div>
+      <div class="stat">
+        <span class="stat__value">{{ taskCount() }}</span>
+        <span class="stat__label">Tasks</span>
+      </div>
+    </div>
+
+    <mat-form-field appearance="outline" class="hero__search">
+      <mat-icon matPrefix fontSet="material-symbols-outlined">search</mat-icon>
+      <mat-label>Search features…</mat-label>
+      <input matInput type="text" [ngModel]="query()" (ngModelChange)="query.set($event)" />
+      @if (query()) {
+        <button matSuffix mat-icon-button (click)="clearQuery()" aria-label="Clear">
+          <mat-icon fontSet="material-symbols-outlined">close</mat-icon>
+        </button>
+      }
+    </mat-form-field>
+  </div>
+</section>
+
+<section class="catalog">
+  @for (group of filteredGroups(); track group.section.key) {
+    <div class="section">
+      <header class="section__header">
+        <div class="section__icon">
+          <mat-icon fontSet="material-symbols-outlined">{{ group.section.icon }}</mat-icon>
+        </div>
+        <div>
+          <h2 class="section__title">{{ group.section.label }}</h2>
+          <p class="section__desc">{{ group.section.description }}</p>
+        </div>
+      </header>
+
+      <div class="grid">
+        @for (f of group.features; track f.slug) {
+          <a class="card" [routerLink]="['/feature', f.slug]">
+            <div class="card__title-row">
+              <h3 class="card__title">{{ f.title }}</h3>
+              @if (f.demoKey) {
+                <span class="card__pill card__pill--demo" title="Has interactive demo">
+                  <mat-icon fontSet="material-symbols-outlined">play_circle</mat-icon>
+                </span>
+              }
+              @if (f.tasks && f.tasks.length) {
+                <span class="card__pill card__pill--tasks" [title]="f.tasks.length + ' tasks'">
+                  <mat-icon fontSet="material-symbols-outlined">checklist</mat-icon>
+                </span>
+              }
+              @if (f.version) {
+                <span class="card__pill card__pill--version" [title]="f.version">
+                  <mat-icon fontSet="material-symbols-outlined">new_releases</mat-icon>
+                </span>
+              }
+            </div>
+            <p class="card__tagline">{{ f.tagline }}</p>
+            <span class="card__cta">
+              Explore
+              <mat-icon fontSet="material-symbols-outlined">arrow_forward</mat-icon>
+            </span>
+          </a>
+        }
+      </div>
+    </div>
+  } @empty {
+    <div class="empty">
+      <mat-icon fontSet="material-symbols-outlined">search_off</mat-icon>
+      <p>No features match “{{ query() }}”.</p>
+      <button mat-stroked-button (click)="clearQuery()">Clear search</button>
+    </div>
+  }
+</section>

@@ -1,0 +1,89 @@
+# See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
+
+# Compiled output
+/dist
+/tmp
+/out-tsc
+/bazel-out
+
+# Node
+/node_modules
+npm-debug.log
+yarn-error.log
+
+# IDEs and editors
+.idea/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/mcp.json
+.history/*
+
+# Miscellaneous
+/.angular/cache
+.sass-cache/
+/connect.lock
+/coverage
+/libpeerconnection.log
+testem.log
+/typings
+__screenshots__/
+
+# System files
+.DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db
+$RECYCLE.BIN/
+
+# Environment files / secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Logs
+logs/
+*.log
+pnpm-debug.log*
+lerna-debug.log*
+
+# Build / cache directories
+/.angular/
+.cache/
+.parcel-cache/
+.turbo/
+.nx/cache/
+.vite/
+.eslintcache
+.stylelintcache
+
+# Test / coverage
+/coverage
+.nyc_output/
+*.lcov
+
+# Editors / OS
+*.swp
+*.swo
+*~
+
+# Dependency lock backups
+package-lock.json.bak
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Production source maps (optional — uncomment if you do NOT want to publish maps)
+# *.js.map

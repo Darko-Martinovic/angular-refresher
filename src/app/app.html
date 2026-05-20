@@ -1,0 +1,105 @@
+<mat-toolbar class="toolbar" color="primary">
+  <button mat-icon-button (click)="toggleSidenav()" aria-label="Toggle navigation">
+    <mat-icon fontSet="material-symbols-outlined">menu</mat-icon>
+  </button>
+
+  <a class="toolbar__brand" routerLink="/">
+    <span class="toolbar__logo">
+      <mat-icon fontSet="material-symbols-outlined">flutter_dash</mat-icon>
+    </span>
+    <span class="toolbar__title">
+      <strong>Angular Refresher</strong>
+      <small>v21 · modern reactivity</small>
+    </span>
+  </a>
+
+  <span class="toolbar__spacer"></span>
+
+  <button
+    mat-icon-button
+    (click)="toggleTheme()"
+    [matTooltip]="theme() === 'dark' ? 'Switch to light' : 'Switch to dark'"
+    aria-label="Toggle theme"
+  >
+    <mat-icon fontSet="material-symbols-outlined">
+      {{ theme() === 'dark' ? 'light_mode' : 'dark_mode' }}
+    </mat-icon>
+  </button>
+
+  <a
+    mat-icon-button
+    href="https://angular.dev"
+    target="_blank"
+    rel="noopener"
+    matTooltip="Official Angular docs"
+    aria-label="Angular docs"
+  >
+    <mat-icon fontSet="material-symbols-outlined">menu_book</mat-icon>
+  </a>
+</mat-toolbar>
+
+<mat-sidenav-container class="container" [hasBackdrop]="isHandset()">
+  <mat-sidenav
+    #drawer
+    class="sidenav"
+    [mode]="sidenavMode()"
+    [opened]="sidenavOpened()"
+    (openedChange)="sidenavOpened.set($event)"
+    fixedInViewport="false"
+  >
+    <nav class="nav">
+      <a
+        class="nav__item nav__item--home"
+        routerLink="/"
+        routerLinkActive="nav__item--active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        (click)="onNavClick()"
+      >
+        <mat-icon fontSet="material-symbols-outlined">home</mat-icon>
+        <span>Home</span>
+      </a>
+
+      <mat-accordion multi>
+        @for (group of grouped(); track group.section.key) {
+          <mat-expansion-panel
+            class="nav__panel"
+            [expanded]="true"
+            hideToggle="false"
+          >
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                <mat-icon fontSet="material-symbols-outlined">{{ group.section.icon }}</mat-icon>
+                <span>{{ group.section.label }}</span>
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+
+            <div class="nav__list">
+              @for (f of group.features; track f.slug) {
+                <a
+                  class="nav__leaf"
+                  [routerLink]="['/feature', f.slug]"
+                  routerLinkActive="nav__leaf--active"
+                  (click)="onNavClick()"
+                >
+                  <span class="nav__leaf-bullet"></span>
+                  <span class="nav__leaf-text">{{ f.title }}</span>
+                  @if (f.demoKey) {
+                    <mat-icon
+                      class="nav__leaf-flag"
+                      fontSet="material-symbols-outlined"
+                      matTooltip="Has live demo"
+                    >play_circle</mat-icon>
+                  }
+                </a>
+              }
+            </div>
+          </mat-expansion-panel>
+        }
+      </mat-accordion>
+    </nav>
+  </mat-sidenav>
+
+  <mat-sidenav-content class="content">
+    <router-outlet />
+  </mat-sidenav-content>
+</mat-sidenav-container>

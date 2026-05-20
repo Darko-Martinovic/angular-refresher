@@ -1,0 +1,19 @@
+<div class="code-block">
+  <header class="code-block__header">
+    <span class="code-block__lang">{{ languageLabel() }}</span>
+    @if (label(); as l) {
+      <span class="code-block__label">{{ l }}</span>
+    }
+    <span class="code-block__spacer"></span>
+    <button
+      mat-icon-button
+      type="button"
+      class="code-block__copy"
+      matTooltip="Copy snippet"
+      (click)="copy()"
+    >
+      <mat-icon fontSet="material-symbols-outlined">content_copy</mat-icon>
+    </button>
+  </header>
+  <pre class="code-block__pre"><code #codeEl class="hljs" [innerHTML]="highlighted()"></code></pre>
+</div>

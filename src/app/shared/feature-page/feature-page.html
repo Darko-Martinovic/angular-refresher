@@ -1,0 +1,150 @@
+@if (feature(); as f) {
+  <article class="feature-page">
+    <header class="feature-page__header">
+      <a class="feature-page__crumb" routerLink="/">
+        <mat-icon fontSet="material-symbols-outlined">home</mat-icon>
+        Home
+      </a>
+      @if (section(); as s) {
+        <mat-icon class="feature-page__sep" fontSet="material-symbols-outlined">chevron_right</mat-icon>
+        <span class="feature-page__crumb feature-page__crumb--section">
+          <mat-icon fontSet="material-symbols-outlined">{{ s.icon }}</mat-icon>
+          {{ s.label }}
+        </span>
+      }
+    </header>
+
+    <section class="feature-page__hero">
+      <h1>{{ f.title }}</h1>
+      <p class="feature-page__tagline">{{ f.tagline }}</p>
+      <div class="feature-page__badges">
+        @if (f.version) {
+          <span class="badge badge--version">
+            <mat-icon fontSet="material-symbols-outlined">new_releases</mat-icon>
+            {{ f.version }}
+          </span>
+        }
+        @if (f.demoKey) {
+          <span class="badge badge--demo">
+            <mat-icon fontSet="material-symbols-outlined">play_circle</mat-icon>
+            Interactive demo
+          </span>
+        }
+      </div>
+      <p class="feature-page__summary">{{ f.summary }}</p>
+    </section>
+
+    <section class="feature-page__section">
+      <h2><mat-icon fontSet="material-symbols-outlined">key</mat-icon>Key points</h2>
+      <ul class="feature-page__bullets">
+        @for (point of f.keyPoints; track point) {
+          <li>{{ point }}</li>
+        }
+      </ul>
+    </section>
+
+    @if (f.snippets.length) {
+      <section class="feature-page__section">
+        <h2><mat-icon fontSet="material-symbols-outlined">code</mat-icon>Snippets</h2>
+        <div class="feature-page__snippets">
+          @for (snippet of f.snippets; track $index) {
+            <app-code-block
+              [code]="snippet.code"
+              [language]="snippet.language"
+              [label]="snippet.label"
+            />
+          }
+        </div>
+      </section>
+    }
+
+    @if (demoComponent(); as cmp) {
+      <section class="feature-page__section feature-page__section--demo">
+        <h2><mat-icon fontSet="material-symbols-outlined">play_circle</mat-icon>Live demo</h2>
+        <div class="feature-page__demo">
+          <ng-container *ngComponentOutlet="cmp" />
+        </div>
+      </section>
+    } @else if (f.demoKey) {
+      <section class="feature-page__section">
+        <p class="feature-page__loading">Loading interactive demo…</p>
+      </section>
+    }
+
+    @if (f.tasks && f.tasks.length) {
+      <section class="feature-page__section">
+        <h2><mat-icon fontSet="material-symbols-outlined">checklist</mat-icon>Tasks</h2>
+        <app-feature-tasks [slug]="f.slug" [tasks]="f.tasks" />
+      </section>
+    }
+
+    @if (f.pointers.length) {
+      <section class="feature-page__section">
+        <h2><mat-icon fontSet="material-symbols-outlined">explore</mat-icon>Explore in the codebase</h2>
+        <ul class="feature-page__pointers">
+          @for (p of f.pointers; track p.path) {
+            <li>
+              <code>{{ p.path }}</code>
+              <span class="feature-page__pointer-label">{{ p.label }}</span>
+              @if (p.note) {
+                <span class="feature-page__pointer-note">{{ p.note }}</span>
+              }
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    @if (f.redFlags?.length) {
+      <section class="feature-page__section">
+        <h2><mat-icon fontSet="material-symbols-outlined">flag</mat-icon>Red flags</h2>
+        <ul class="feature-page__bullets feature-page__bullets--warn">
+          @for (rf of f.redFlags; track rf) {
+            <li>{{ rf }}</li>
+          }
+        </ul>
+      </section>
+    }
+
+    @if (f.references.length) {
+      <section class="feature-page__section">
+        <h2><mat-icon fontSet="material-symbols-outlined">menu_book</mat-icon>References</h2>
+        <ul class="feature-page__refs">
+          @for (ref of f.references; track ref.url) {
+            <li>
+              <a [href]="ref.url" target="_blank" rel="noopener">
+                {{ ref.label }}
+                <mat-icon fontSet="material-symbols-outlined">open_in_new</mat-icon>
+              </a>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    <mat-divider />
+
+    <nav class="feature-page__nav">
+      @if (neighbors().prev; as prev) {
+        <a mat-stroked-button [routerLink]="['/feature', prev.slug]" class="feature-page__nav-link">
+          <mat-icon fontSet="material-symbols-outlined">arrow_back</mat-icon>
+          <span class="feature-page__nav-label">
+            <small>Previous</small>
+            <strong>{{ prev.title }}</strong>
+          </span>
+        </a>
+      } @else {
+        <span></span>
+      }
+      @if (neighbors().next; as next) {
+        <a mat-stroked-button [routerLink]="['/feature', next.slug]" class="feature-page__nav-link feature-page__nav-link--next">
+          <span class="feature-page__nav-label">
+            <small>Next</small>
+            <strong>{{ next.title }}</strong>
+          </span>
+          <mat-icon fontSet="material-symbols-outlined">arrow_forward</mat-icon>
+        </a>
+      }
+    </nav>
+  </article>
+}

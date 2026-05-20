@@ -1,0 +1,115 @@
+<div class="tasks">
+  <div class="tasks__progress">
+    <mat-icon fontSet="material-symbols-outlined">task_alt</mat-icon>
+    <strong>{{ completedCount() }}</strong> / {{ tasks().length }} completed
+  </div>
+
+  @for (task of tasks(); track $index; let i = $index) {
+    <div
+      class="task"
+      [class.task--correct]="isCorrect(i)"
+      [class.task--wrong]="isWrong(i)"
+    >
+      <header class="task__header">
+        <span class="task__num">Task {{ i + 1 }}</span>
+        <span class="task__kind">{{ task.validator.kind }}</span>
+        @if (task.hint) {
+          <button
+            mat-button
+            type="button"
+            class="task__hint-btn"
+            (click)="toggleHint(i)"
+          >
+            <mat-icon fontSet="material-symbols-outlined">
+              {{ stateOf(i).hintOpen ? 'visibility_off' : 'lightbulb' }}
+            </mat-icon>
+            {{ stateOf(i).hintOpen ? 'Hide hint' : 'Hint' }}
+          </button>
+        }
+      </header>
+
+      <p class="task__prompt">{{ task.prompt }}</p>
+
+      @if (stateOf(i).hintOpen && task.hint) {
+        <p class="task__hint">{{ task.hint }}</p>
+      }
+
+      <div class="task__input">
+        @switch (task.validator.kind) {
+          @case ('predict') {
+            <mat-radio-group
+              [ngModel]="stateOf(i).answer"
+              (ngModelChange)="setAnswer(i, $event)"
+              class="task__options"
+            >
+              @for (option of task.validator.options; track $index; let oi = $index) {
+                <mat-radio-button [value]="oi" [disabled]="isSubmitted(i)">
+                  {{ option }}
+                </mat-radio-button>
+              }
+            </mat-radio-group>
+          }
+          @case ('input') {
+            <mat-form-field appearance="outline" class="task__field">
+              <mat-label>Your answer</mat-label>
+              <input
+                matInput
+                type="text"
+                [ngModel]="stateOf(i).answer || ''"
+                (ngModelChange)="setAnswer(i, $event)"
+                [disabled]="isSubmitted(i)"
+                (keydown.enter)="canSubmit(i) && submit(i)"
+                autocomplete="off"
+                spellcheck="false"
+              />
+            </mat-form-field>
+          }
+          @case ('self-check') {
+            <mat-checkbox
+              [ngModel]="stateOf(i).answer === true"
+              (ngModelChange)="setAnswer(i, $event)"
+              [disabled]="isSubmitted(i)"
+            >
+              I've tried this in the demo above
+            </mat-checkbox>
+          }
+        }
+      </div>
+
+      <div class="task__actions">
+        @if (!isSubmitted(i)) {
+          <button
+            mat-raised-button
+            color="primary"
+            (click)="submit(i)"
+            [disabled]="!canSubmit(i)"
+          >
+            <mat-icon fontSet="material-symbols-outlined">check</mat-icon>
+            Check answer
+          </button>
+        } @else {
+          <button mat-stroked-button (click)="reset(i)">
+            <mat-icon fontSet="material-symbols-outlined">refresh</mat-icon>
+            Try again
+          </button>
+        }
+      </div>
+
+      @if (isSubmitted(i)) {
+        <div
+          class="task__feedback"
+          [class.task__feedback--ok]="isCorrect(i)"
+          [class.task__feedback--wrong]="!isCorrect(i)"
+        >
+          <mat-icon fontSet="material-symbols-outlined">
+            {{ isCorrect(i) ? 'check_circle' : 'cancel' }}
+          </mat-icon>
+          <div>
+            <strong>{{ isCorrect(i) ? 'Correct.' : 'Not quite.' }}</strong>
+            <span>{{ task.validator.explanation }}</span>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
